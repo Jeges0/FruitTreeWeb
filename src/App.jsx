@@ -1,16 +1,18 @@
 import { useState } from "react";
 import TreeMap from "./components/TreeMap";
 import TreeControls from "./components/TreeControls";
+import { useFruitTree } from "./hooks/useFruitTree";
 import "./App.css";
 
-const CENTER = [47.4979, 19.0402]; // Budapest, change to your area
+const CENTER = [47.4979, 19.0402]; // Budapest
 
 function App() {
-  const [trees, setTrees] = useState([
-    { id: 1, fruit: "Pear", position: CENTER },
-  ]);
+  const [trees, setTrees] = useState([]);
   const [fruit, setFruit] = useState("Apple");
   const [adding, setAdding] = useState(false);
+  const [view, setView] = useState(null);
+
+  const { trees: publicTrees, clusters, loading, error } = useFruitTree(view);
 
   function handleMapClick(position) {
     if (!adding) return;
@@ -18,10 +20,15 @@ function App() {
     setAdding(false);
   }
 
+  let status = null;
+  if (error) status = "Couldn't load tree data. Is the API running?";
+  else if (adding) status = `Click on the map to place your ${fruit} tree.`;
+  else if (loading) status = "Loading trees...";
+
   return (
     <div className="app">
       <header className="header">
-        <h1>🍎 Fruttree</h1>
+        <h1>FruitTree</h1>
         <TreeControls
           fruit={fruit}
           onFruitChange={setFruit}
@@ -30,11 +37,17 @@ function App() {
         />
       </header>
 
-      {adding && (
-        <div className="hint">Click on the map to place your {fruit} tree.</div>
-      )}
-
-      <TreeMap center={CENTER} trees={trees} onMapClick={handleMapClick} />
+      <div className="map-area">
+        <TreeMap
+          center={CENTER}
+          trees={trees}
+          publicTrees={publicTrees}
+          clusters={clusters}
+          onMapClick={handleMapClick}
+          onViewChange={setView}
+        />
+        {status && <div className="status">{status}</div>}
+      </div>
     </div>
   );
 }

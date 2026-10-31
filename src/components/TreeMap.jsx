@@ -1,16 +1,19 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
-import L from "leaflet";
+import { useCallback, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { FRUITS } from "../data/fruits";
-
-function treeIcon(fruit) {
-  return L.divIcon({
-    html: `<div class="tree-icon">${FRUITS[fruit]}</div>`,
-    className: "",
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  });
-}
+import { treeIcon } from "../utils/treeIcon";
+import FruitTreeInfoPopup from "./FruitTreeInfoPopup";
+import ClusterMarkers from "./ClusterMarkers";
+import WeatherInfo from "./WeatherInfo";
+import AirQualityInfo from "./AirQualityInfo";
 
 function ClickHandler({ onMapClick }) {
   useMapEvents({
@@ -21,7 +24,32 @@ function ClickHandler({ onMapClick }) {
   return null;
 }
 
-function TreeMap({ center, trees, onMapClick }) {
+// Tells the parent which area and zoom level is visible
+function ViewWatcher({ onViewChange }) {
+  const map = useMap();
+
+  const report = useCallback(() => {
+    const b = map.getBounds();
+    onViewChange({
+      bounds: {
+        south: b.getSouth(),
+        west: b.getWest(),
+        north: b.getNorth(),
+        east: b.getEast(),
+      },
+      zoom: map.getZoom(),
+    });
+  }, [map, onViewChange]);
+
+  useMapEvents({ moveend: report });
+  useEffect(() => {
+    report();
+  }, [report]);
+
+  return null;
+}
+
+function TreeMap({ center, trees, publicTrees, clusters, onMapClick, onViewChange }) {
   return (
     <MapContainer center={center} zoom={14} className="map">
       <TileLayer
@@ -29,12 +57,36 @@ function TreeMap({ center, trees, onMapClick }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <ClickHandler onMapClick={onMapClick} />
+      <ViewWatcher onViewChange={onViewChange} />
 
-      {trees.map((tree) => (
-        <Marker key={tree.id} position={tree.position} icon={treeIcon(tree.fruit)}>
-          <Popup>{tree.fruit} tree</Popup>
+      <ClusterMarkers clusters={clusters} />
+
+      {publicTrees.map((tree) => (
+        <Marker
+          key={tree.id}
+          position={tree.position}
+          icon={treeIcon(tree.emoji, "public")}
+        >
+          <Popup>
+            <FruitTreeInfoPopup tree={tree} />
+          </Popup>
         </Marker>
       ))}
+
+      {trees.map((tree) => (
+  <Marker key={tree.id} position={tree.position} icon={treeIcon(FRUITS[tree.fruit])}>
+    <Popup>
+      <div className="tree-popup">
+        <h3>
+          {FRUITS[tree.fruit]} {tree.fruit} (yours)
+        </h3>
+        <WeatherInfo position={tree.position} />
+        <hr />
+        <AirQualityInfo position={tree.position} />
+      </div>
+    </Popup>
+  </Marker>
+))}
     </MapContainer>
   );
 }

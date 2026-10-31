@@ -24,9 +24,8 @@ dist-ssr
 *.sw?
 
 # Python / ML
-ml/venv/
+venv/
 ml/__pycache__/
 ml/*.csv
 ml/model.pkl
-
-*.csv
+ml/*.db

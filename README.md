@@ -22,3 +22,15 @@ This is some documentation of my website, during developement
 ## Falling Fruit
 
 Falling fruit has a database of fruit trees and a map. They kindly went public with their data, so I downloaded it. I didnt use API beacuse it requires a key, so this will do for my HW
+
+## DataBase
+
+Made a Database that stores all the trees, and types.
+
+## API
+
+Making own API so it doesnt have to load whole database at once.
+
+## OpenMeteo
+
+Using openmeteo API to get weather updates, and showing it on tree info card
