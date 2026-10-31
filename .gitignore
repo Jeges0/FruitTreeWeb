@@ -29,3 +29,5 @@ ml/__pycache__/
 ml/*.csv
 ml/model.pkl
 ml/*.db
+ml/cache/
+ml/*.pkl

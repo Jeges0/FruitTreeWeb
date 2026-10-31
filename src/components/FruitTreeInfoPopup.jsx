@@ -27,6 +27,8 @@ function FruitTreeInfoPopup({ tree }) {
           <a href={details.link} target="_blank" rel="noreferrer">
             View on Falling Fruit
           </a>
+          <br />
+          <small>Tree data: Falling Fruit</small>
         </>
       )}
 
@@ -34,8 +36,6 @@ function FruitTreeInfoPopup({ tree }) {
       <WeatherInfo position={tree.position} />
       <hr />
       <AirQualityInfo position={tree.position} />
-      <br />
-      <small>Tree data: Falling Fruit</small>
     </div>
   );
 }

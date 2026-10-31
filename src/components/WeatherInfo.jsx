@@ -1,5 +1,6 @@
 import { useWeather } from "../hooks/useWeather";
 import { wateringAdvice } from "../utils/waterCalc";
+import WateringRisk from "./WateringRisk";
 
 function adviceText(advice) {
   if (advice.isToday) return "💧 Water today";
@@ -24,7 +25,8 @@ function WeatherInfo({ position }) {
       <p>Wind: {weather.current.wind} km/h</p>
       <p>Rain, last 7 days: {weather.rainPast7} mm</p>
       <p>Rain, next 3 days: {weather.rainNext3} mm</p>
-      <p className="advice">{adviceText(advice)}</p>
+      <WateringRisk position={position} />
+      <p className="advice">Calculated: {adviceText(advice)}</p>
       <small>Weather: Open-Meteo.com</small>
     </div>
   );

@@ -3,6 +3,15 @@ import sqlite3
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+import time
+
+import joblib
+import numpy as np
+import pandas as pd
+import requests
+
+from features import build_features, PAST_DAYS
+
 DB = Path(__file__).parent / "trees.db"
 
 
@@ -19,6 +28,19 @@ def check_database():
 
 
 check_database()
+
+MODEL_PATH = Path(__file__).parent / "water_model.pkl"
+bundle = joblib.load(MODEL_PATH) if MODEL_PATH.exists() else None
+FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+_watering_cache = {}
+
+
+def risk_level(p: float) -> str:
+    if p < 0.2:
+        return "Low"
+    if p < 0.5:
+        return "Medium"
+    return "High"
 
 app = FastAPI(title="Fruttree API")
 app.add_middleware(
@@ -115,3 +137,41 @@ def tree_details(tree_id: int):
     if not rows:
         raise HTTPException(status_code=404, detail="Tree not found")
     return rows[0]
+
+@app.get("/watering")
+def watering(lat: float, lng: float):
+    """Chance that the soil around this tree is dry tomorrow."""
+    if bundle is None:
+        raise HTTPException(status_code=503, detail="Model not trained. Run: python ml\\train_watering.py")
+
+    key = (round(lat, 2), round(lng, 2))
+    hit = _watering_cache.get(key)
+    if hit and time.time() - hit[0] < 1800:  # reuse for 30 minutes
+        return hit[1]
+
+    r = requests.get(FORECAST_URL, params={
+        "latitude": lat, "longitude": lng,
+        "daily": "precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max",
+        "past_days": PAST_DAYS, "forecast_days": 5, "timezone": "auto",
+    }, timeout=20)
+    if not r.ok:
+        raise HTTPException(status_code=502, detail="Weather service failed")
+
+    d = r.json()["daily"]
+    daily = pd.DataFrame({
+        "date": pd.to_datetime(d["time"]),
+        "rain": d["precipitation_sum"],
+        "et0": d["et0_fao_evapotranspiration"],
+        "tmax": d["temperature_2m_max"],
+    }).fillna({"rain": 0, "et0": 0}).ffill()
+
+    row = build_features(daily, lat).iloc[[PAST_DAYS]]  # row 30 = today
+    if row.isna().to_numpy().any():
+        raise HTTPException(status_code=502, detail="Incomplete weather data")
+
+    raw = bundle["model"].predict_proba(row[bundle["features"]])[:, 1]
+    p = float(bundle["calibrator"].predict(raw)[0])
+
+    result = {"probability": round(p, 3), "percent": round(p * 100), "level": risk_level(p)}
+    _watering_cache[key] = (time.time(), result)
+    return result

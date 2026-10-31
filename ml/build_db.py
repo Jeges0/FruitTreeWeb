@@ -57,6 +57,7 @@ for chunk in pd.read_csv(
 print("Building index (this makes map lookups fast)...")
 con.execute("CREATE INDEX idx_trees_lat_lng ON trees (lat, lng)")
 con.execute("CREATE INDEX idx_trees_type ON trees (type_id)")
+con.execute("CREATE INDEX idx_trees_id ON trees (id)")
 con.commit()
 con.close()
 
