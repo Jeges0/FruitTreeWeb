@@ -49,11 +49,8 @@ When installing Python, **tick "Add python.exe to PATH"** on the first screen. A
 ```bash
 git clone https://github.com/Jeges0/FruitTreeWeb.git
 cd FruitTreeWeb
-git checkout dev
 code .
 ```
-
-`git checkout dev` is only needed if your work is on the `dev` branch. If you already have the folder, just open it with **File > Open Folder**.
 
 ### Step 3: Open a terminal in VS Code
 
@@ -97,7 +94,7 @@ You must activate the venv again every time you open a new terminal for Python w
 
 ### Step 6: Download the tree data
 
-1. Go to the Falling Fruit website and find their data download page.
+1. Go to the Falling Fruit website and find their data download page. https://fallingfruit.org/about/data
 2. Download the full database. You get two files: `types.csv` and `locations.csv`.
 3. Put both files in the `ml` folder.
 
