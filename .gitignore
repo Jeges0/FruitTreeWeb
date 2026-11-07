@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python / ML
+venv/
+ml/__pycache__/
+ml/*.csv
+ml/model.pkl
+ml/*.db
+ml/cache/
+ml/*.pkl

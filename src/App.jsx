@@ -1,122 +1,55 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import TreeMap from "./components/TreeMap";
+import TreeControls from "./components/TreeControls";
+import { useFruitTree } from "./hooks/useFruitTree";
+import "./App.css";
+
+const CENTER = [47.4979, 19.0402]; // Budapest
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [trees, setTrees] = useState([]);
+  const [fruit, setFruit] = useState("Apple");
+  const [adding, setAdding] = useState(false);
+  const [view, setView] = useState(null);
+
+  const { trees: publicTrees, clusters, loading, error } = useFruitTree(view);
+
+  function handleMapClick(position) {
+    if (!adding) return;
+    setTrees((prev) => [...prev, { id: Date.now(), fruit, position }]);
+    setAdding(false);
+  }
+
+  let status = null;
+  if (error) status = "Couldn't load tree data. Is the API running?";
+  else if (adding) status = `Click on the map to place your ${fruit} tree.`;
+  else if (loading) status = "Loading trees...";
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="header">
+        <h1>FruitTree</h1>
+        <TreeControls
+          fruit={fruit}
+          onFruitChange={setFruit}
+          adding={adding}
+          onToggleAdding={() => setAdding(!adding)}
+        />
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <div className="map-area">
+        <TreeMap
+          center={CENTER}
+          trees={trees}
+          publicTrees={publicTrees}
+          clusters={clusters}
+          onMapClick={handleMapClick}
+          onViewChange={setView}
+        />
+        {status && <div className="status">{status}</div>}
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
